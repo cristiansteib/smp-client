@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func sendDiskInfo(ctx context.Context, cancelFunc context.CancelFunc, writeAPI api.WriteAPIBlocking, diskInfoProvider diskinfo.DiskInfoProvider) {
+func sendDiskInfo(ctx context.Context, cancelFunc context.CancelFunc, writeAPI api.WriteAPIBlocking, diskInfoProvider diskinfo.DiskInfoProvider, config *appconfig.AppConfig) {
 	disks, err := diskInfoProvider.GetDisksInfo()
 	if err != nil {
 		logrus.Errorf("Failed to retrieve disk info: %v", err)
@@ -20,8 +20,8 @@ func sendDiskInfo(ctx context.Context, cancelFunc context.CancelFunc, writeAPI a
 	}
 	for _, diskInfo := range disks {
 		tags := map[string]string{
-			"host":   "hostName",
-			"client": "escuela1",
+			"host":   config.InfluxTags.Host,
+			"client": config.InfluxTags.Client,
 			"device": diskInfo.DeviceName,
 		}
 		fields := map[string]interface{}{
@@ -50,7 +50,7 @@ func Service(ctx context.Context, cancelFunc context.CancelFunc, config *appconf
 			cancelFunc()
 			return
 		case <-ticker.C:
-			sendDiskInfo(ctx, cancelFunc, writeAPI, diskInfoProvider)
+			sendDiskInfo(ctx, cancelFunc, writeAPI, diskInfoProvider, config)
 		}
 	}
 }

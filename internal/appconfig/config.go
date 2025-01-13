@@ -6,11 +6,17 @@ import (
 	"os"
 )
 
+type InfluxTagsConfig struct {
+	Host   string `json:"host"`
+	Client string `json:"client"`
+}
+
 type AppConfig struct {
-	InfluxURL    string `json:"influx_url"`
-	InfluxOrg    string `json:"influx_org"`
-	InfluxBucket string `json:"influx_bucket"`
-	InfluxToken  string `json:"influx_token"`
+	InfluxURL    string           `json:"influx_url"`
+	InfluxOrg    string           `json:"influx_org"`
+	InfluxBucket string           `json:"influx_bucket"`
+	InfluxToken  string           `json:"influx_token"`
+	InfluxTags   InfluxTagsConfig `json:"influx_tags"`
 }
 
 func (c *AppConfig) validateConfig() error {
