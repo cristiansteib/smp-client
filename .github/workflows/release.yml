@@ -42,11 +42,12 @@ jobs:
           mkdir -p build
           GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o build/smp-srv-${{ matrix.arch }}${{ matrix.ext }} ./cmd/srv/
 
-      - name: Upload build artifact
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: smp-srv-${{ matrix.os }}-${{ matrix.arch }}
-          path: build/smp-srv-${{ matrix.arch }}${{ matrix.ext }}
+          name: smp-srv-binaries
+          path: build/
+
 
   release:
     name: Attach Binaries to GitHub Release
@@ -54,11 +55,11 @@ jobs:
     needs: build
 
     steps:
-      - name: Download artifacts
+      - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
-          path: build
-
+          name: smp-srv-binaries
+          path: build/
       - name: Attach binaries to release
         uses: softprops/action-gh-release@v1
         with:
