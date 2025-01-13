@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Ejecuta solo en pushes de etiquetas semánticas
+
+jobs:
+  build:
+    name: Build Binaries
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [windows, linux]
+        arch: [amd64, 386]
+        include:
+          - os: windows
+            arch: amd64
+            ext: .exe
+          - os: windows
+            arch: 386
+            ext: .exe
+          - os: linux
+            arch: amd64
+            ext: ''
+          - os: linux
+            arch: 386
+            ext: ''
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Build binaries
+        run: |
+          mkdir -p build
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o build/smp-srv-${{ matrix.arch }}${{ matrix.ext }} ./cmd/srv/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gama-srv-${{ matrix.os }}-${{ matrix.arch }}
+          path: build/gama-srv-${{ matrix.arch }}${{ matrix.ext }}
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install -g semantic-release @semantic-release/github @semantic-release/commit-analyzer @semantic-release/release-notes-generator
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: semantic-release
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: build
+
+      - name: Attach binaries to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

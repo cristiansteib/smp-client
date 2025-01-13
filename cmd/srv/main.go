@@ -5,6 +5,7 @@ import (
 	"flag"
 	"gama-client/internal"
 	"gama-client/internal/appconfig"
+	"gama-client/internal/checks/adminprivileges"
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
@@ -51,16 +52,35 @@ func flagsAndConfigs() *AppExecConfig {
 	return &AppExecConfig{configPath: configPath}
 }
 
+func assertInitialChecks(logger *logrus.Logger) {
+	isAdmin, err := adminprivileges.NewAdminPrivileges().Check()
+	if err != nil {
+		logger.Fatalf("error while asserting initial checks: %v", err)
+	}
+	if !isAdmin {
+		logger.Fatal("Application must run as an admin user.")
+	}
+	switch runtime.GOOS {
+	case "windows":
+		logger.Info("Running on Windows")
+	case "linux":
+		logger.Info("Running on Linux")
+	default:
+		logger.Fatalf("Os not supported.")
+	}
+
+}
+
 func main() {
 	logger := setupLogger()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	assertIsRunningWithRequiredPrivileges()
+	assertInitialChecks(logger)
 
 	appExecConfig := flagsAndConfigs()
 	config, err := appconfig.LoadConfig(appExecConfig.configPath)
 	if err != nil {
-		logrus.Errorf("Wrong configuration, %s %s", appExecConfig.configPath, err)
+		logrus.Fatalf("Wrong configuration, '%s', %s", appExecConfig.configPath, err)
 	}
 
 	logger.Info("Starting service")
@@ -72,15 +92,6 @@ func main() {
 		logger.Debugf("Signal received, stopping service [%s].", sig)
 		cancel()
 	}()
-
-	switch runtime.GOOS {
-	case "windows":
-		logger.Info("Running on Windows")
-	case "linux":
-		logger.Info("Running on Linux")
-	default:
-		logger.Info("Os not supported.")
-	}
 
 	go internal.Service(ctx, cancel, config)
 
