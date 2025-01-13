@@ -1,0 +1,14 @@
+name: Validate Build
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    uses: ./.github/workflows/build.yaml
+    with:
+      branch: ${{ github.ref_name }}
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
