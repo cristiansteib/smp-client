@@ -7,7 +7,7 @@ on:
 
 jobs:
   validate:
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/build.yaml
     with:
       branch: ${{ github.ref_name }}
     secrets:
