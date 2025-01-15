@@ -6,6 +6,7 @@ const (
 	StatusSafe    StatusType = "Safe"
 	StatusWarning StatusType = "Warning"
 	StatusError   StatusType = "Error"
+	StatusUnknown StatusType = "Unknown"
 )
 
 type DiskInfo struct {
