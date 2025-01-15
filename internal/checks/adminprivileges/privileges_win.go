@@ -9,5 +9,5 @@ func NewAdminPrivileges() AdminPrivileges {
 }
 
 func (a *WindowsPrivileges) Check() (bool, error) {
-	return false, nil
+	return true, nil
 }
